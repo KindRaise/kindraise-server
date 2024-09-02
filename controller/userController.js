@@ -66,7 +66,7 @@ exports.signUp = async (req, res) => {
         await newUser.save();
 
         // Generate JWT token
-        const token = jwt.sign({ id: newUser._id, email: newUser.email }, process.env.JWT_SECRET, { expiresIn: '1m' });
+        const token = jwt.sign({ id: newUser._id, email: newUser.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
         // Send verification email
         const verifyLink = `${req.protocol}://${req.get('host')}/api/v1/user/verify-email/${token}`;

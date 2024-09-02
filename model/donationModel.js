@@ -12,7 +12,7 @@ const donationSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'Campaign', 
         required: true 
-    },
+    }, 
     paymentMethod: { 
       type: String, 
       enum: ['credit_card', 'paypal', 'bank_transfer'], 
@@ -20,7 +20,7 @@ const donationSchema = new mongoose.Schema({
     },
     transactionId: { 
       type: String, 
-      required: true, 
+      required: true,  
       unique: true 
     },
     status: { 

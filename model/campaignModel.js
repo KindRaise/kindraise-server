@@ -5,25 +5,25 @@ const campaignSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
-  description: { 
+  subtitle: { 
     type: String, 
     required: true 
   },
-  goalAmount: { 
-    type: Number, 
+  story: { 
+    type: String, 
     required: true 
   },
-  raisedAmount: { 
-    type: Number, 
-    default: 0 
+  uploadPhoto: { 
+    type: String, 
+    required: true 
   },
-  startDate: { 
-    type: Date, 
+  Goal: { 
+    type: String, 
     required: true 
   },
   endDate: { 
     type: Date, 
-    required: true 
+    
   },
   creator: {
     type: mongoose.Schema.Types.ObjectId,
@@ -48,5 +48,5 @@ const campaignSchema = new mongoose.Schema({
  
 }, {timestamps: true});
 
-const CampaignModel = mongoose.mod('Campaign', campaignSchema);
+const CampaignModel = mongoose.model('Campaign', campaignSchema);
 module.exports = CampaignModel
