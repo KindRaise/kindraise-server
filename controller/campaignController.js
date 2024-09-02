@@ -59,7 +59,7 @@ exports.getAllCampaigns = async (req, res) => {
   // Delete a campaign
   exports.deleteCampaign = async (req, res) => {
     try {
-      const deletedCampaign = await campaignModel.findByIdAndUpdate(
+      const deletedCampaign = await campaignModel.findByIdAndDelete(
         req.params.id,
         { status: 'DELETED' },
         { new: true }

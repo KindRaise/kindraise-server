@@ -1,73 +1,52 @@
-const mongoose=require("mongoose")   
+const mongoose = require('mongoose');
 
-const campaignSchema= new mongoose.Schema({
-  title:{type:String, 
-    required:true},
-
-      description:{type:String,
-        required:true},
-      
-    targetAmount:{type:Number,
-      required:true,
-      },
-
-    deadline:{type:String, 
-      required:true},
-
-    
-   npo:{type:mongoose.Schema.Types.ObjectId,
-    ref:"npo"}
-   
- },{timestamps:true})
-
- const campaignModel=mongoose.model("campaign",campaignSchema)
- 
-
- module.exports=campaignModel
-
- const mongoose = require('mongoose');
-
-const CampaignSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
+const campaignSchema = new mongoose.Schema({
+  title: { 
+    type: String, 
+    required: true 
   },
-  description: {
-    type: String,
-    required: true,
+  description: { 
+    type: String, 
+    required: true 
   },
-  targetAmount: {
-    type: Number,
-    required: true,
+  goalAmount: { 
+    type: Number, 
+    required: true 
   },
-  currentAmount: {
-    type: Number,
-    default: 0,
+  raisedAmount: { 
+    type: Number, 
+    default: 0 
   },
-  startDate: {
-    type: Date,
-    required: true,
+  startDate: { 
+    type: Date, 
+    required: true 
   },
-  endDate: {
-    type: Date,
-    required: true,
+  endDate: { 
+    type: Date, 
+    required: true 
   },
-  status: {
-    type: String,
-    enum: ['PENDING', 'APPROVED', 'DELETED'],
-    default: 'PENDING',
-  },
-  createdBy: {
+  creator: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
     required: true,
-  },
-  location: {
-    type: String,
-  },
-  media: [{
-    type: String,
-  }],
-});
+    refPath: 'creatorModel',
+  }, // Reference to NPO or Individual who created the campaign
+  creatorModel: { 
+    type: String, 
+    required: true, 
+    enum: ['npo', 'Individual'] 
+  }, 
+  approvedByAdmin: { 
+    type: Boolean, 
+    default: false 
+  }, 
+  status: { 
+    type: String, 
+    enum: ['Pending', 'Approved', 'Rejected', 'Completed'], 
+  default: 'Pending' 
+},
+  donations: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Donation' }],
+ 
+}, {timestamps: true});
 
-module.exports = mongoose.model('Campaign', CampaignSchema);
+const CampaignModel = mongoose.mod('Campaign', campaignSchema);
+module.exports = CampaignModel
