@@ -183,7 +183,7 @@ const signUpTemplate = (verifyLink, fullName) => {
           .header {
             background: #007bff;
             padding: 10px;
-            text-align: center;
+            text-align: center; 
             border-bottom: 1px solid #ddd;
             color: #fff;
           }

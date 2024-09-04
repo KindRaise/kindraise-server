@@ -1,6 +1,6 @@
 
 const express =require("express")
-const router=require("./router/userRouter")
+const router=require("./router/individualRouter.js")
 //const npoRouter=require("./router/npoRouter")
 const cors=require("cors")
 

@@ -1,33 +1,24 @@
 const joiValidator = require("@hapi/joi");
 
 const schemas = {
-    // firstName: joiValidator
-    //     .string()
-    //     .required()
-    //     .min(3)
-    //     .regex(/^[A-Za-z]+(?: [A-Za-z]+)*$/),
+
     firstName: joiValidator.string().trim()
-    .min(3)
-    .required()
-    .pattern(/^[^\s].*[^\s]$/) // Ensures no leading or trailing spaces
-    .pattern(/^[A-Za-z]+(?: [A-Za-z]+)*$/) // Ensures only alphabetic characters and allows spaces within
-    .messages({
-      'string.pattern.base': 'First name must not start or end with  spaces and should contain only letters.',
-      'string.min': 'First name must be at least 3 characters long.',
-    }),
-        lastName: joiValidator
+        .min(3)
+        .required()
+        .pattern(/^[^\s].*[^\s]$/) // Ensures no leading or trailing spaces
+        .pattern(/^[A-Za-z]+(?: [A-Za-z]+)*$/) // Ensures only alphabetic characters and allows spaces within
+        .messages({
+            'string.pattern.base': 'First name must not start or end with  spaces and should contain only letters.',
+            'string.min': 'First name must be at least 3 characters long.',
+        }),
+    lastName: joiValidator
         .string()
         .regex(/^\S.*\S$/) // Ensures no leading or trailing spaces
         .required()
         .messages({
-          "string.pattern.base": "Last name cannot have leading or trailing spaces.",
+            "string.pattern.base": "Last name cannot have leading or trailing spaces.",
         }),
-    // lastName: joiValidator
-    //     .string()
-    //     .required()
-    //     .min(3)
-    //     .trim()
-    //     .regex(/^[A-Za-z]+(?: [A-Za-z]+)*$/),
+
     email: joiValidator
         .string()
         .email()
@@ -42,17 +33,15 @@ const schemas = {
             "string.pattern.base": "Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character",
             "string.empty": "Password cannot be empty",
         }),
-    role: joiValidator
+    phoneNumber: joiValidator
         .string()
-        .valid('npo', 'individual','admin')
         .required(),
     organizationName: joiValidator
         .string()
         .optional(),
-    organizationDetails: joiValidator
+    registrationNumber: joiValidator
         .string()
-        .optional(),
-    
+        .required(),
 };
 
 
@@ -62,14 +51,14 @@ const staffEntryValidator = (validateAllFields = false) => {
         req.body.firstName = req.body.firstName ? req.body.firstName.trim() : '';
         req.body.lastName = req.body.lastName ? req.body.lastName.trim() : '';
         req.body.email = req.body.email ? req.body.email.trim() : '';
- 
-         const keysToValidate={}
-        Object.keys(schemas).forEach((key)=>{
-            if(validateAllFields){
-                keysToValidate[key]=req.body[key]!==undefined ? schemas[key].required():schemas[key]
-            }else{
-                if(req.body[key]!==undefined){
-                    keysToValidate[key]= schemas[key] 
+
+        const keysToValidate = {}
+        Object.keys(schemas).forEach((key) => {
+            if (validateAllFields) {
+                keysToValidate[key] = req.body[key] !== undefined ? schemas[key].required() : schemas[key]
+            } else {
+                if (req.body[key] !== undefined) {
+                    keysToValidate[key] = schemas[key]
                 }
             }
         })

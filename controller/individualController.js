@@ -1,5 +1,5 @@
 
-const userModel=require("../model/userModel")
+const individualModel=require("../model/individualModel")
 const cloudinary=require("../utilis/cloudinary")
 const jwt=require("jsonwebtoken")
 const bcrypt=require("bcrypt")   
@@ -12,25 +12,16 @@ const {signUpTemplate,verifyTemplate,forgotPasswordTemplate}=require("../helpers
 exports.signUp = async (req, res) => {
     try {
         // Destructure fields from the request body
-        const { firstName, lastName, email, password, role, organizationName, organizationDetails } = req.body;
+        const { firstName, lastName, email, password,phoneNumber} = req.body;
 
         // Validate required fields
-        if (!firstName || !lastName || !email || !password) {
-            return res.status(400).json({ message: 'First name, last name, email, and password are required.' });
+        if (!firstName || !lastName || !email || !password||! phoneNumber) {
+            return res.status(400).json({ message: 'all details are required.' });
         }
 
-        // Validate field lengths
-        if (firstName.length < 3 || lastName.length < 3 || password.length < 8) {
-            return res.status(400).json({ message: 'First and last names must be at least 3 characters long, and the password must be at least 8 characters long.' });
-        }
-
-        // Validate role-specific fields
-        if (role === 'npo' && (!organizationName || !organizationDetails)) {
-            return res.status(400).json({ message: 'Organization name and details are required for NPO.' });
-        }
-
+      
         // Check if user already exists
-        const existingUser = await userModel.findOne({ email: email.toLowerCase() });
+        const existingUser = await individualModel.findOne({ email: email.toLowerCase() });
         if (existingUser) {
             return res.status(400).json({ message: 'A user with this email already exists.' });
         }
@@ -51,15 +42,14 @@ exports.signUp = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Create new user
-        const newUser = new userModel({
+        const newUser = new individualModel({
             firstName,
             lastName,
             email: email.toLowerCase(),
             password: hashedPassword,
-            role,
+            phoneNumber,
             profilePic: profilePicUrl,
-            organizationName: role === 'npo' ? organizationName : undefined,
-            organizationDetails: role === 'npo' ? organizationDetails : undefined,
+           
         });
 
         // Save user to database
@@ -77,10 +67,10 @@ exports.signUp = async (req, res) => {
         });
 
         // Respond to client
-        const { password: _, ...userWithoutPassword } = newUser.toObject();
+        const { password: _, ...individualWithoutPassword } = newUser.toObject();
         res.status(201).json({
             message: `Congratulations, ${newUser.firstName}! You have successfully signed up. Please check your email to verify your account.`,
-            data: userWithoutPassword,
+            data: individualWithoutPassword,
             token,
         });
     } catch (error) {
@@ -95,7 +85,7 @@ exports.verifyEmail=async(req,res)=>{
         const {token}=req.params
         //extract email from the verified token
         const {email}=jwt.verify(token,process.env.JWT_SECRET)
-            const user=await userModel.findOne({email})
+            const user=await individualModel.findOne({email})
              if(!user){
                 return res.status(400).json({info:`user not found`})
              }
@@ -119,7 +109,7 @@ exports.logIn=async(req,res)=>{
         if(!email ||!password){
             return res.status(400).json({info:`log in must contain email and password`})
         }
-        const user=await userModel.findOne({email}) 
+        const user=await individualModel.findOne({email}) 
         
         if(!user ){
             return res.status(401).json({info:`user with email not found`})
@@ -147,7 +137,7 @@ exports.resendVerificationEmail=async (req,res)=>{
     try {
        const {email}=req.body
       
-       const user=await userModel.findOne({email})
+       const user=await individualModel.findOne({email})
        if(email.length<=8){
         return res.status(400).json('please kindly input your email correctly')
        }
@@ -176,7 +166,7 @@ exports.forgetPassword=async(req,res)=>{
         
         const {email}=req.body 
         
-       const user=await userModel.findOne({email})
+       const user=await individualModel.findOne({email})
        if(!user){
         return res.status(400).json({message:`user with email not in database`})
        } 
@@ -211,7 +201,7 @@ exports.resetPassword = async (req, res) => {
         const { email } = jwt.verify(token, process.env.JWT_SECRET);
 
         // Find the user by email
-        const user = await userModel.findOne({ email });
+        const user = await individualModel.findOne({ email });
 
         if (!user) {
             return res.status(400).json({ info: 'User not found' });
@@ -237,7 +227,7 @@ exports.changePassword=async(req,res)=>{
         const {token}=req.params
         const{oldPassword,NewPassword,ConfirmNewPassword}=req.body
         const {email}=jwt.verify(token,process.env.JWT_SECRET)
-        const user=await userModel.findOne({email})
+        const user=await individualModel.findOne({email})
         if(!user){
             return res.status(400).json({info:`user not found`})
         }
@@ -266,11 +256,11 @@ exports.updatedUser=async(req,res)=>{
     try {
         const {id}=req.params
         const{firstName,lastName,email}=req.body
-        const user=await userModel.findById(id)
+        const user=await individualModel.findById(id)
         if (!user) {
             return res.status(400).json({info:`user not found,check id and try again`})
         }
-        const data=new userModel({
+        const data=new individualModel({
             firstName:firstName||user.firstName,
             lastName:lastName||user.lastName,
             email:email||user.email,
@@ -287,7 +277,7 @@ exports.updatedUser=async(req,res)=>{
             fs.unlinkSinc(oldFilePath)
         }
       data.photo=req.files.filename
-      const updateUser=await userModel.findByIdAndUpdate(id,data,{new:true})
+      const updateUser=await individualModel.findByIdAndUpdate(id,data,{new:true})
     }
     res.status(200).json({message:`user updated successfully`,data:updateUser})
     } catch (error) {
@@ -300,7 +290,7 @@ exports.getAllAdmins = async (req, res) => {
         console.log("Fetching admins from the database...");
 
         // Find users with roles 'admin1' or 'admin2'
-        const adminsOnly = await userModel.find({ role: { $in: ["admin"] } });
+        const adminsOnly = await individualModel.find({ role: { $in: ["admin"] } });
 
         console.log(`Admins found: ${adminsOnly.length}`);
         adminsOnly.forEach(admin => {
@@ -332,7 +322,7 @@ exports.deleteOne=async(req,res)=>{
                 fs.unlinkSinc(oldFilePath)
             }
         }
-        const userInfo=await userModel.findByIdAndDelete(id)
+        const userInfo=await individualModel.findByIdAndDelete(id)
         return res.status(200).json({info:`delete successful`,})
     } catch (error) {
         res.status(500).json({info:`${error.message}`})
@@ -341,11 +331,11 @@ exports.deleteOne=async(req,res)=>{
 
 exports.deleteAll=async(req,res)=>{
     try {
-        const allUsers = await userModel.find()
+        const allUsers = await individualModel.find()
         if(allUsers<1){
             return res.status(400).json({info:`oops!,sorry no user found in database`})
         }
-         const deleteAllUser=await userModel.deleteMany({})
+         const deleteAllUser=await individualModel.deleteMany({})
          return res.status(200).json({info:`all ${allUsers.length} users in database deleted successfully`})
     } catch (error) {
         return  res.status(500).json({
@@ -357,7 +347,7 @@ exports.deleteAll=async(req,res)=>{
 
 exports.getAll = async (req, res) => {
     try {
-        const allUsers = await userModel.find();
+        const allUsers = await individualModel.find();
         if(allUsers<=0){
             return res.status(400).json({info:`oops !! no user found in database`})
         }
@@ -397,7 +387,7 @@ exports.logOut = async (req, res) => {
         const { id } = decoded;
         console.log('User ID from Token:', id); // Log the user ID
 
-        const user = await userModel.findById(id); // Find user by ID
+        const user = await individualModel.findById(id); // Find user by ID
         if (!user) {
             return res.status(400).json({ nfo: `Access denied, user not found` });
         }
@@ -416,7 +406,7 @@ exports.logOut = async (req, res) => {
 exports.getOne=async(req,res)=>{
     try {
       const {id}=req.params
-      const details=await userModel.findById(id) 
+      const details=await individualModel.findById(id) 
       if(!details){
         return res.status(400).json({info:`user with id not found`})
       }
@@ -428,7 +418,7 @@ exports.getOne=async(req,res)=>{
 exports.makeAdmin=async(req,res)=>{
     try {
         const {id}=req.params
-        const user=await userModel.findById(id)
+        const user=await individualModel.findById(id)
         if(!user){
             return res.status(400).json({info:`user not found`})
         }

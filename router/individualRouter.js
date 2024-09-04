@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const uploads=require("../utilis/multer")
-const { signUp, logIn, deleteAll, getAll,updatedUser,getAllAdmins,deleteOne,verifyEmail,resendVerificationEmail,forgetPassword,resetPassword, changePassword,logOut,getOne,makeAdmin}=require("../controller/userController"); 
+const { signUp, logIn, deleteAll, getAll,updatedUser,getAllAdmins,deleteOne,verifyEmail,resendVerificationEmail,forgetPassword,resetPassword, changePassword,logOut,getOne,makeAdmin}=require("../controller/individualController"); 
 const staffEntryValidator=require("../middleware/validator") 
 
 const{authenticate,authenticateAdmin}=require("../middleware/auth")
