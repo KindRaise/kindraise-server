@@ -146,43 +146,40 @@ exports.getCampaignById = async (req, res) => {
     }
 };
 
-// Update a campaign
 exports.updateCampaign = async (req, res) => {
     try {
         const { story, subtitle } = req.body;
-        const { campaignId, individualId } = req.params;
+        const { campaignId } = req.params;
 
-        
+        // Assuming you're using JWT and `req.user` contains the authenticated user's details
+        const individualId = req.user.id;
+
+        // Find the campaign by ID
         const campaign = await campaignModel.findById(campaignId);
         if (!campaign) {
             return res.status(400).json({ info: `Invalid campaign ID` });
         }
 
-      
+        // Find the user by their ID (extracted from the JWT token)
         const user = await individualModel.findById(individualId);
         if (!user) {
             return res.status(400).json({ info: `Invalid user ID` });
         }
 
-        
+        // Check if the user has permission (role) to update the campaign
         if (user.role !== 'individual') {
-            return res.status(403).json({ info: `Unauthorized: Only individual can update campaigns` });
+            return res.status(403).json({ info: `Unauthorized: Only NPOs can update campaigns` });
         }
 
-        // Optionally, ensure that the campaign belongs to the user updating it
-        if (campaign.createdBy.toString() !== user._id.toString()) {
-            return res.status(403).json({ info: `Unauthorized: You can only update campaigns you created` });
-        }
+       
 
-        
+        // Update the campaign
         campaign.story = story || campaign.story; 
         campaign.subtitle = subtitle || campaign.subtitle;
         await campaign.save();
 
-        return res.status(200).json({ message: `Campaign updated successfully` });
+        return res.status(200).json({ message: `Campaign updated successfully by ${user.firstName}`,campaign });
     } catch (error) {
         return res.status(400).json({ error: error.message });
     }
 };
-
-
