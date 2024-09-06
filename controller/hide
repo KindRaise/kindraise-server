@@ -110,6 +110,69 @@ const npoSchema= new mongoose.Schema({
    
  
 
+const mongoose = require('mongoose');
+
+// Campaign Schema
+const campaignSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    subtitle: { type: String, required: true },
+    story: { type: String, required: true },
+    uploadPhoto: { type: String, required: true }, // Change to String for URL/file path
+    Goal: { type: String, required: true },
+    endDate: { type: Date },
+    ev: { type: String },
+    creator: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        refPath: 'creatorModel', // Dynamically reference 'npo' or 'individual'
+    },
+    creatorModel: { // Defines if the creator is an individual or npo
+        type: String,
+        required: true,
+        enum: ['npo', 'individual'],
+    },
+    approvedByAdmin: { type: Boolean, default: false },
+    itsstatus: { type: String, enum: ['active', 'inactive'], default: 'inactive', required: true },
+    isSponsored: { type: Boolean, default: false },
+    sponsoredAt: { type: Date, default: null },
+    raised: { type: Number },
+    donations: [{ type: mongoose.Schema.Types.ObjectId, ref: 'donations' }],
+    supporters: { type: Number }
+}, { timestamps: true });
+
+const CampaignModel = mongoose.model('Campaign', campaignSchema);
+module.exports = CampaignModel;
+
+// Create campaign by Individual function
+exports.createCampaignByIndividual = async (req, res) => {
+    try {
+        const { title, subtitle, story, uploadPhoto, Goal, status } = req.body;
+        const individualId = req.user.id; // Assuming req.user is populated by authentication middleware
+
+        // Validate input fields
+        if (!title || !subtitle || !story || !uploadPhoto || !Goal || !status) {
+            return res.status(400).json({ info: 'All fields are required' });
+        }
+
+        // Create a new campaign
+        const newCampaign = new CampaignModel({
+            title,
+            subtitle,
+            story,
+            uploadPhoto,
+            Goal,
+            status: status || 'inactive',
+            creator: individualId,
+            creatorModel: 'individual', // Set to individual when created by individual
+        });
+
+        const savedCampaign = await newCampaign.save();
+        return res.status(201).json(savedCampaign);
+    } catch (error) {
+        console.error('Error creating Individual campaign:', error);
+        return res.status(500).json({ error: 'An error occurred while creating the Individual campaign' });
+    }
+};
 
 
 

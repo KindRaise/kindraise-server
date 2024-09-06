@@ -35,13 +35,16 @@ const schemas = {
         }),
     phoneNumber: joiValidator
         .string()
+        .min(11)
+        .max(11)
         .required(),
+
     organizationName: joiValidator
         .string()
         .optional(),
     registrationNumber: joiValidator
         .string()
-        .required(),
+        .optional(),
 };
 
 

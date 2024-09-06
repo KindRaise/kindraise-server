@@ -25,6 +25,7 @@ exports.signUp = async (req, res) => {
         if (existingUser) {
             return res.status(400).json({ message: 'A user with this email already exists.' });
         }
+        
 
         // Handle file upload
         let profilePicUrl = null;
@@ -74,11 +75,21 @@ exports.signUp = async (req, res) => {
             token,
         });
     } catch (error) {
-        console.error('Sign-up error:', error);
-        res.status(500).json({ message: `Sign-up failed: ${error.message}` });
+        
+        if (error.code === 11000) {
+           
+            const duplicateField = Object.keys(error.keyValue)[0]; 
+            const duplicateValue = error.keyValue[duplicateField];
+
+            return res.status(400).json({
+                error: `Duplicate value: ${duplicateValue} for field: ${duplicateField}. Please use another one.`,
+            });
+        }
+
+        // Handle other errors
+        return res.status(500).json({ error: error.message });
     }
 };
-
 exports.verifyEmail=async(req,res)=>{
     try {
         //extract token from params
@@ -122,7 +133,7 @@ exports.logIn=async(req,res)=>{
         if(!user.isVerified){
             return res.status(400).json({message:`please verify your email first`})
         }
-        const token=jwt.sign({id:user._id},process.env.JWT_SECRET,{expiresIn:"1h"})
+        const token=jwt.sign({id:user._id,role:user.role},process.env.JWT_SECRET,{expiresIn:"1h"})
         const{password:_,...userData}=user.toObject()
         return res.status(200).json({
             info:`logged in successful`,
@@ -138,9 +149,7 @@ exports.resendVerificationEmail=async (req,res)=>{
        const {email}=req.body
       
        const user=await individualModel.findOne({email})
-       if(email.length<=8){
-        return res.status(400).json('please kindly input your email correctly')
-       }
+       
        if(!user){
         return res.status(400).json({message:`user with email not in database`})
        } 
@@ -285,32 +294,6 @@ exports.updatedUser=async(req,res)=>{
     }
 }
 
-exports.getAllAdmins = async (req, res) => {
-    try {
-        console.log("Fetching admins from the database...");
-
-        // Find users with roles 'admin1' or 'admin2'
-        const adminsOnly = await individualModel.find({ role: { $in: ["admin"] } });
-
-        console.log(`Admins found: ${adminsOnly.length}`);
-        adminsOnly.forEach(admin => {
-            console.log(`Admin: ${admin.fullName}, Role: ${admin.role}`);
-        });
-        const alladmins=adminsOnly.map(admins=>{
-         const token=jwt.sign({_id:adminsOnly._id},process.env.JWT_SECRET,{expiresIn:"1 hour"})
-         return{ ...admins.toObject(),token}  
-        })
-        return res.status(200).json({
-            info: `${adminsOnly.length} admins in database collected successfully`,
-            alladmins,
-            
-        });
-    } catch (error) {
-        return res.status(500).json({
-            message: `Cannot fetch admins in database because ${error.message}`
-        });
-    }
-};
 
 exports.deleteOne=async(req,res)=>{
     try {
@@ -391,6 +374,9 @@ exports.logOut = async (req, res) => {
         if (!user) {
             return res.status(400).json({ nfo: `Access denied, user not found` });
         }
+        if(user.blackList.includes(token)){
+            return res.status(400).json({message:`bad request,token has already been used`})
+        }
 
         user.blackList.push(token);
         await user.save();
@@ -410,20 +396,22 @@ exports.getOne=async(req,res)=>{
       if(!details){
         return res.status(400).json({info:`user with id not found`})
       }
-      res.status(200).json({message:`${details.fullName} details collected successfully`,details})
+     
+      res.status(200).json({message:`${details.firstName} details collected successfully`,details})
     } catch (error) {
-        return res.status(500).json({info:`unable to find ${details.lastName} details because ${error} `})
+        return res.status(500).json({info:`unable to find user because ${error} `})
     }
 } 
 exports.makeAdmin=async(req,res)=>{
     try {
-        const {id}=req.params
-        const user=await individualModel.findById(id)
+        const {userId}=req.params
+        const user=await individualModel.findById(userId)
         if(!user){
             return res.status(400).json({info:`user not found`})
         }
         user.isAdmin=true
-        res.status(200).json({info:`congratulations ${user.firstName}, you are now an admin`})
+        user.role='admin'
+        res.status(200).json({info:`congratulations ${user.firstName}, you are now an admin`,user})
     } catch (error) {
         res.status(500).json({message:`unable to make admin because ${error}`})
     }

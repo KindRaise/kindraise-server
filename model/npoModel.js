@@ -9,7 +9,8 @@ const npoSchema = new mongoose.Schema({
     phoneNumber: { type: String, required: true, unique: true },
     organizationName: { type: String, required: true },
     registrationNumber: { type: String, required: true, unique: true },
-    approved: { type: Boolean, default: false },
+    isVerified: { type: Boolean, default: false },
+    blackList: [{ type: String }],
     campaigns: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Campaign' }],
     //donors: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Donation' }],
     totalRaised: { type: Number, default: 0 },
@@ -19,7 +20,7 @@ const npoSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-const npoModel = mongoose.model('NPO', npoSchema);
+const npoModel = mongoose.model('npo', npoSchema);
 module.exports = npoModel;
 
 

@@ -6,6 +6,7 @@ const individualSchema = new mongoose.Schema({
   phoneNumber: { type: String, unique: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  //scamThreat: { type: Boolean, default: false }
   profilePic: { type: String },
   blackList: [{ type: String }],
   isVerified: { type: Boolean, default: false },

@@ -1,17 +1,22 @@
 const campaignModel = require("../model/campaignModel")
 const individualModel = require("../model/individualModel")
 const npoModel = require("../model/npoModel")
-const claudinary=require("../utilis/cloudinary")
+const cloudinary=require("../utilis/cloudinary")
 const sendmail=require("../helpers/html")
 
 exports.createCampaignByNpo = async (req, res) => {
     try {
-        const { title, subTile, story, Photo, Goal,  } = req.body;
-        const npoId = req.user.id;
+        const { title, subtitle, story, Goal, raised } = req.body;
+        const {npoId} = req.params;
 
-        if (!title || !subTile || !story || !Photo || !Goal ) {
+        if (!title || !subtitle || !story || !Goal ||!raised ) {  
             return res.status(400).json({ info: 'All fields are required' });
         }
+        const user=await npoModel.findById(npoId)
+        if(!user){
+            return res.status(404).json({info:`user not found`})
+        }
+       
         let profilePicUrl = null;
         if (req.file) {
             try {
@@ -19,23 +24,28 @@ exports.createCampaignByNpo = async (req, res) => {
                 profilePicUrl = uploadResult.url;
             } catch (error) {
                 return res.status(500).json({ message: `Image upload failed: ${error.message}` });
-            }
+            } 
         }
 
         const newCampaign = new campaignModel({
             title,
-            subTile,
+            subtitle,
             story,
             Photo:profilePicUrl,
             Goal,
 
             
-            creator: {
+            campaignCreator: {
                 type: 'npo',
                 id: npoId,
-            },
+           },
+
         });
+        if(newCampaign.Goal === newCampaign.raised){
+            newCampaign.status="inactive"
+        }
         newCampaign.status="active"
+       
         const savedCampaign = await newCampaign.save();
         // const userEmail= npoId.email
         // const messageSubject = " your campaign has been created"
@@ -48,45 +58,71 @@ exports.createCampaignByNpo = async (req, res) => {
         //     html:mailHtml
         // })
 
-        return res.status(201).json(savedCampaign);
+        return res.status(201).json({message:`campaign created by ${user.firstName}`,data:savedCampaign});
     } catch (error) {
         console.error('Error creating NPO campaign:', error);
         return res.status(500).json({ error: `An error occurred while creating the NPO campaign because ${error}` });
     }
 };
 
+
 exports.createCampaignByIndividual = async (req, res) => {
     try {
-        const { title, subTile, story, Photo, Goal, status } = req.body;
-        const individualId = req.user.id;
+        const { title, subtitle, story, Goal,raised  } = req.body;
+        const {individualId} = req.params;
 
-        // Validate input fields
-        if (!title || !subTile || !story || !Photo || !Goal || !status) {
+        if (!title || !subtitle || !story || !Goal||!raised ) {  
             return res.status(400).json({ info: 'All fields are required' });
         }
+        const user=await individualModel.findById(individualId)
+        if(!user){
+            return res.status(404).json({info:`user not found`})
+        }
+       
+        let profilePicUrl = null;
+        if (req.file) {
+            try {
+                const uploadResult = await cloudinary.uploader.upload(req.file.path);
+                profilePicUrl = uploadResult.url;
+            } catch (error) {
+                return res.status(500).json({ message: `Image upload failed: ${error.message}` });
+            } 
+        }
 
-        const newCampaign = new Campaign({
+        const newCampaign = new campaignModel({
             title,
-            subTile,
+            subtitle,
             story,
-            Photo,
+            Photo:profilePicUrl,
             Goal,
-            status: status || 'inactive',
-            creator: {
+            raised,
+            campaignCreator: {
                 type: 'individual',
                 id: individualId,
-            },
+           },
         });
-
+      
+        if(newCampaign.Goal === newCampaign.raised){
+            newCampaign.status="inactive"
+        }
         const savedCampaign = await newCampaign.save();
+        // const userEmail= npoId.email
+        // const messageSubject = " your campaign has been created"
 
-        return res.status(201).json(savedCampaign);
+        // const mailHtml = ``
+
+        // await sendmail({
+        //     email:userEmail,
+        //     subject:messageSubject,
+        //     html:mailHtml
+        // })
+
+        return res.status(201).json({message:`campaign created by ${user.firstName}`,data:savedCampaign});
     } catch (error) {
-        console.error('Error creating Individual campaign:', error);
-        return res.status(500).json({ error: 'An error occurred while creating the Individual campaign' });
+        console.error('Error creating NPO campaign:', error);
+        return res.status(500).json({ error: `An error occurred while creating the individual campaign because ${error}` });
     }
 };
-
 
 
 // Get all campaigns
@@ -113,21 +149,39 @@ exports.getCampaignById = async (req, res) => {
 // Update a campaign
 exports.updateCampaign = async (req, res) => {
     try {
-        const {story,subTitle}=req.body
-        const campaignId=req.params.id
+        const { story, subtitle } = req.body;
+        const { campaignId, individualId } = req.params;
+
         
-        let campaign=await campaignModel.findById(campaignId)
-        if(!campaign){
-            return res.status(404).json({message:`campaing not found`})
+        const campaign = await campaignModel.findById(campaignId);
+        if (!campaign) {
+            return res.status(400).json({ info: `Invalid campaign ID` });
         }
 
-        campaign.story=story   
-        campaign.subTitle=subTitle
-        await campaign.save()
+      
+        const user = await individualModel.findById(individualId);
+        if (!user) {
+            return res.status(400).json({ info: `Invalid user ID` });
+        }
+
         
-        return res.status(200).json({message:`campaign updated successfully`})
+        if (user.role !== 'individual') {
+            return res.status(403).json({ info: `Unauthorized: Only individual can update campaigns` });
+        }
+
+        // Optionally, ensure that the campaign belongs to the user updating it
+        if (campaign.createdBy.toString() !== user._id.toString()) {
+            return res.status(403).json({ info: `Unauthorized: You can only update campaigns you created` });
+        }
+
+        
+        campaign.story = story || campaign.story; 
+        campaign.subtitle = subtitle || campaign.subtitle;
+        await campaign.save();
+
+        return res.status(200).json({ message: `Campaign updated successfully` });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        return res.status(400).json({ error: error.message });
     }
 };
 

@@ -1,11 +1,5 @@
 const mongoose = require('mongoose');
 
-const userInCampaignSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true },
-    role: { type: String, enum: ['participant', 'contributor'], default: 'participant' },
-});
-
 const campaignSchema = new mongoose.Schema({
     title: { 
         type: String, 
@@ -21,32 +15,42 @@ const campaignSchema = new mongoose.Schema({
     },
     uploadPhoto: { 
         type: Number, 
-        required: true 
+        //required: true 
     },
     Goal: { 
-        type: String, 
+        type: Number, 
         required: true 
     },
     endDate: { 
         type: Date,    
-    },
+    }, 
     ev: { 
         type:String
     },
-    creator: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        refPath: 'creatorModel',
+    campaignCreator: {
+       // type: mongoose.Schema.Types.ObjectId,
+       // required: true,
+       // refPath: 'npo',
+        type:{type:String,default:'npo'},
+        id:String
     },
    
-    approvedByAdmin: { 
-        type: Boolean, 
-        default: false 
-    }, 
-    itsstatus: { 
+    creator: {
+        type: mongoose.Schema.Types.ObjectId,
+       // required: true,
+        refPath: 'npo',
+        type:String,
+        id:String
+    },
+   
+    // approvedByAdmin: { 
+    //     type: Boolean, 
+    //     default: false 
+    // }, 
+    status: { 
         type: String, 
         enum: ['active', 'inactive',],
-        default:"inactive" ,
+        default:"active" ,
         required: true 
     },
     isSponsored:{type:Boolean,
@@ -56,14 +60,14 @@ const campaignSchema = new mongoose.Schema({
       default:null
     },
     raised: { 
-        type: Number 
-        
+        type: Number,
+        required:true
     },
     npo:{type: mongoose.Schema.Types.ObjectId,
-      ref:"NPO"
+      ref:"npo"
     },
     individual:{type: mongoose.Schema.Types.ObjectId,
-      ref:"Individual"
+      ref:"individual"
     },
     donations:{type: mongoose.Schema.Types.ObjectId,
       ref:"donations"

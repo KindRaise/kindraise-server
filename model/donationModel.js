@@ -23,7 +23,9 @@ const donationSchema = new mongoose.Schema({
       individual:{type: mongoose.Schema.Types.ObjectId,
         ref:"individual"
       },
-     
+      npo:{type: mongoose.Schema.Types.ObjectId,
+        ref:"npo"
+      },
    
 }, { timestamps: true });
 

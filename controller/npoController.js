@@ -9,15 +9,26 @@ const {signUpTemplate,verifyTemplate,forgotPasswordTemplate}=require("../helpers
 
 
 
-exports.signUp = async (req, res) => {
+exports.NposignUp = async (req, res) => {
     try {
         // Destructure fields from the request body
         const { firstName, lastName, email, password, phoneNumber, organizationName,registrationNumber} = req.body;
+        const allFields= { firstName, lastName, email, password, phoneNumber, organizationName,registrationNumber}
 
         // Validate required fields
         if (!firstName || !lastName || !email || !password ||!organizationName||!registrationNumber||!phoneNumber) {
-            return res.status(400).json({ message: 'all details are required.' });
+            const missingFields = [];
+    for (const [key, value] of Object.entries(allFields)) {
+        if (!value) {
+            missingFields.push(key);
         }
+    }
+
+    // Return error message with the list of missing fields
+    return res.status(400).json({ 
+        message: `The following fields are required: ${missingFields.join(', ')}`
+    });
+}
 
       
         // Check if user already exists
@@ -58,30 +69,37 @@ exports.signUp = async (req, res) => {
         await newNpo.save();
 
         // Generate JWT token
-        const token = jwt.sign({ id: newUser._id, email: newUser.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ id: newNpo._id, email: newNpo.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
         // Send verification email
         const verifyLink = `${req.protocol}://${req.get('host')}/api/v1/user/verify-email/${token}`;
         await sendmail({
-            email: newUser.email,
+            email: newNpo.email,
             subject: 'Verify Your Email',
-            html: signUpTemplate(verifyLink, newUser.firstName),
+            html: signUpTemplate(verifyLink, newNpo.firstName),
         });
 
         // Respond to client
-        const { password: _, ...npoWithoutPassword } = newUser.toObject();
+        const { password: _, ...npoWithoutPassword } = newNpo.toObject();
         res.status(201).json({
             message: `Congratulations, ${newNpo.firstName}! You have successfully signed up. Please check your email to verify your account.`,
             data: npoWithoutPassword,
             token,
         });
     } catch (error) {
+        if(error.code === 11000){
+
+            const duplicateField = Object.keys(error.keyValue)[0]
+            const duplicateValue = error.keyValue[duplicateField]
+
+            return res.status(400).json({message:`sorry, this ${duplicateValue} has already been used for this ${duplicateField},kindly try another one `})
+        }
         console.error('Sign-up error:', error);
         res.status(500).json({ message: `Sign-up failed: ${error.message}` });
     }
 };
 
-exports.verifyEmail=async(req,res)=>{
+exports.NpoverifyEmail=async(req,res)=>{
     try {
         //extract token from params
         const {token}=req.params
@@ -105,7 +123,7 @@ exports.verifyEmail=async(req,res)=>{
         res.status(500).json({info:`unable to verify because ${error}`})
     }
 }
-exports.logIn=async(req,res)=>{
+exports.NpologIn=async(req,res)=>{
     try {
         const{email,password}=req.body
         if(!email ||!password){
@@ -135,7 +153,7 @@ exports.logIn=async(req,res)=>{
     }
 }
 //if token expired and user want to receive another verification message
-exports.resendVerificationEmail=async (req,res)=>{
+exports.NporesendVerificationEmail=async (req,res)=>{
     try {
        const {email}=req.body
       
@@ -163,7 +181,7 @@ exports.resendVerificationEmail=async (req,res)=>{
     }
 }
 
-exports.forgetPassword=async(req,res)=>{
+exports.NpoforgetPassword=async(req,res)=>{
     try {
         
         const {email}=req.body 
@@ -188,7 +206,7 @@ exports.forgetPassword=async(req,res)=>{
 }
 
 
-exports.resetPassword = async (req, res) => {
+exports.NporesetPassword = async (req, res) => {
     try {
         const { token } = req.params;
         const { newPassword } = req.body;
@@ -224,7 +242,7 @@ exports.resetPassword = async (req, res) => {
 };
 
 
-exports.changePassword=async(req,res)=>{
+exports.NpochangePassword=async(req,res)=>{
     try {
         const {token}=req.params
         const{oldPassword,NewPassword,ConfirmNewPassword}=req.body
@@ -254,7 +272,7 @@ res.status(500).json({info:`unable to change password because ${error}`})
 
 
 
-exports.updatedUser=async(req,res)=>{
+exports.updateNpo=async(req,res)=>{
     try {
         const {id}=req.params
         const{firstName,lastName,email}=req.body
@@ -287,34 +305,8 @@ exports.updatedUser=async(req,res)=>{
     }
 }
 
-exports.getAllAdmins = async (req, res) => {
-    try {
-        console.log("Fetching admins from the database...");
 
-        // Find users with roles 'admin1' or 'admin2'
-        const adminsOnly = await npoModel.find({ role: { $in: ["admin"] } });
-
-        console.log(`Admins found: ${adminsOnly.length}`);
-        adminsOnly.forEach(admin => {
-            console.log(`Admin: ${admin.fullName}, Role: ${admin.role}`);
-        });
-        const alladmins=adminsOnly.map(admins=>{
-         const token=jwt.sign({_id:adminsOnly._id},process.env.JWT_SECRET,{expiresIn:"1 hour"})
-         return{ ...admins.toObject(),token}  
-        })
-        return res.status(200).json({
-            info: `${adminsOnly.length} admins in database collected successfully`,
-            alladmins,
-            
-        });
-    } catch (error) {
-        return res.status(500).json({
-            message: `Cannot fetch admins in database because ${error.message}`
-        });
-    }
-};
-
-exports.deleteOne=async(req,res)=>{
+exports.deleteOneNpo=async(req,res)=>{
     try {
         const {id}=req.params
         
@@ -331,7 +323,7 @@ exports.deleteOne=async(req,res)=>{
     }
 }
 
-exports.deleteAll=async(req,res)=>{
+exports.deleteAllNpo=async(req,res)=>{
     try {
         const allUsers = await npoModel.find()
         if(allUsers<1){
@@ -347,7 +339,7 @@ exports.deleteAll=async(req,res)=>{
 }
 
 
-exports.getAll = async (req, res) => {
+exports.getAllNpo = async (req, res) => {
     try {
         const allUsers = await npoModel.find();
         if(allUsers<=0){
@@ -373,7 +365,7 @@ exports.getAll = async (req, res) => {
         });
     }
 };
-exports.logOut = async (req, res) => { 
+exports.NpologOut = async (req, res) => { 
     try {
         const auth = req.headers.authorization;
         console.log('Authorization Header:', auth); // Log the entire header
@@ -405,7 +397,7 @@ exports.logOut = async (req, res) => {
     }
 };
 
-exports.getOne=async(req,res)=>{
+exports.getOneNpo=async(req,res)=>{
     try {
       const {id}=req.params
       const details=await npoModel.findById(id) 

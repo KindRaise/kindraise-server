@@ -33,20 +33,27 @@ exports.authenticate = async (req, res, next) => {
 
   
 exports.authenticateAdmin = (req, res, next) => {
-    if (req.user.role !== 'admin') { 
-        return res.status(403).json({ message: 'Access Denied. Admin privileges required.' });
-    }
-    next();
-};
-exports.authenticateNpo = (req, res, next) => {
-    if (req.user.role !== 'npo') { 
-        return res.status(403).json({ message: 'Access Denied. npo privileges required.' });
-    }
-    next();
-};
-exports.authenticateDonor  = (req, res, next) => {
-    if (req.user.role !== 'donor') { 
-        return res.status(403).json({ message: 'Access Denied. donor privileges required.' });
-    }
-    next();
-};
+    try {
+        if (req.user.isAdmin) {
+          next();
+        } else {
+          res.status(403).json({ message: "Unauthorized: Not an admin" });
+        }
+      } catch (error) {
+        res.status(500).json({
+          message: error.message,
+        });
+      }
+    };
+// exports.authenticateNpo = (req, res, next) => {
+//     if (!npo) { 
+//         return res.status(403).json({ message: 'Access Denied. npo privileges required.' });
+//     }
+//     next();
+// };
+// exports.authenticateDonor  = (req, res, next) => {
+//     if (!individual) { 
+//         return res.status(403).json({ message: 'Access Denied. individual privileges required.' });
+//     }
+//     next();
+// };
