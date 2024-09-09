@@ -1,4 +1,7 @@
+const cloudinary = require('../utilis/cloudinary'); // Ensure this is correct
+
 const multer=require("multer")
+
 
 const storage=multer.diskStorage({
     destination:(req,file,cb)=>{
@@ -23,16 +26,6 @@ const uploads=multer({
     fileFilter,
     limits:fileSize
 })
-// .fields([
-//     { name: 'image', maxCount: 1 }, // Adjust the field name 'image' to match your file input name
-//     { name: 'firstName', maxCount: 1 },
-//     { name: 'lastName', maxCount: 1 },
-//     { name: 'email', maxCount: 1 },
-//     { name: 'password', maxCount: 1 },
-//     { name: 'role', maxCount: 1 },
-//     { name: 'organizationName', maxCount: 1 },
-//     { name: 'organizationDetails', maxCount: 1 },
-//   ]);
   
 module.exports=uploads
 

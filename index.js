@@ -3,6 +3,7 @@ const express =require("express")
 const router=require("./router/individualRouter.js")
 const npoRouter=require("./router/npoRouter")
 const campaignrouter=require("./router/campaignRouter.js")
+const donationRouter=require("./router/donationRouter.js")
 const cors=require("cors")
  
 
@@ -18,6 +19,7 @@ app.use(cors({origin:"*"}))
 app.use("/api/v1/",router) 
 app.use("/api/v1/",npoRouter)
 app.use("/api/v1/",campaignrouter)
+app.use("/api/v1",donationRouter)
 
 
 app.listen(PORT,(req,res)=>{

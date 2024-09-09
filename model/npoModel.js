@@ -10,9 +10,11 @@ const npoSchema = new mongoose.Schema({
     organizationName: { type: String, required: true },
     registrationNumber: { type: String, required: true, unique: true },
     isVerified: { type: Boolean, default: false },
+    isAdmin: { type: Boolean, default: false },
+    role: { type: String, enum: ['npo', 'admin'],default: 'npo' },
     blackList: [{ type: String }],
     campaigns: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Campaign' }],
-    //donors: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Donation' }],
+   // individual: [{ type: mongoose.Schema.Types.ObjectId, ref: 'individual' }],
     totalRaised: { type: Number, default: 0 },
     profilePicture: {
         pictureId: { type: String },

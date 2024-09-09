@@ -72,7 +72,7 @@ exports.NposignUp = async (req, res) => {
         const token = jwt.sign({ id: newNpo._id, email: newNpo.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
         // Send verification email
-        const verifyLink = `${req.protocol}://${req.get('host')}/api/v1/user/verify-email/${token}`;
+        const verifyLink = `${req.protocol}://${req.get('host')}/api/v1/verify-email/${token}`;
         await sendmail({
             email: newNpo.email,
             subject: 'Verify Your Email',
@@ -404,7 +404,7 @@ exports.getOneNpo=async(req,res)=>{
       if(!details){
         return res.status(400).json({info:`user with id not found`})
       }
-      res.status(200).json({message:`${details.fullName} details collected successfully`,details})
+      res.status(200).json({message:`${details.firstName} details collected successfully`,details})
     } catch (error) {
         return res.status(500).json({info:`unable to find ${details.lastName} details because ${error} `})
     }

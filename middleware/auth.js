@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const userModel = require('../model/individualModel');
+const npoModel=require("../model/npoModel")
 exports.authenticate = async (req, res, next) => {
     try {
         const auth = req.headers.authorization;
@@ -16,11 +17,14 @@ exports.authenticate = async (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         console.log('Decoded token:', decoded); // Log the decoded token
 
-        const user = await userModel.findById(decoded.id);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+        let user
+        user=await userModel.findById(decoded.id)
+           if(!user){
+            user= await npoModel.findById(decoded.id)
+           }
+        if(!user){
+            return res.status(404).json({message:`oops,seems you are passing the wrong id for either npo or individual`})
         }
-
         req.user = user;
         next();
     } catch (error) {
@@ -31,29 +35,36 @@ exports.authenticate = async (req, res, next) => {
     }
 };
 
-  
+
 exports.authenticateAdmin = (req, res, next) => {
     try {
-        if (req.user.isAdmin) {
-          next();
-        } else {
-          res.status(403).json({ message: "Unauthorized: Not an admin" });
+        if(!req.user){
+            return res.status(400).json({message:`user not found`})
         }
-      } catch (error) {
+        if (req.user.role ==="admin") {
+            next();
+        } else {
+            res.status(403).json({ message: "Unauthorized:only admin can perform this action" });
+        }
+    } catch (error) {
         res.status(500).json({
-          message: error.message,
+            message: error.message,
         });
-      }
-    };
-// exports.authenticateNpo = (req, res, next) => {
-//     if (!npo) { 
-//         return res.status(403).json({ message: 'Access Denied. npo privileges required.' });
-//     }
-//     next();
-// };
-// exports.authenticateDonor  = (req, res, next) => {
-//     if (!individual) { 
-//         return res.status(403).json({ message: 'Access Denied. individual privileges required.' });
-//     }
-//     next();
-// };
+    }
+};
+exports.authenticateindividual = (req, res, next) => {
+    try {
+        if(!req.user){
+            return res.status(400).json({message:`user not found`})
+        }
+        if (req.user.role === "individual") {
+            next();
+        } else {
+            res.status(403).json({ message: "Unauthorized:no individual access" });
+        }
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};

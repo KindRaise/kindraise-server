@@ -37,16 +37,44 @@ const schemas = {
         .string()
         .min(11)
         .max(11)
-        .required(),
-
+        .required()
+        .regex(/^(?:\+234|0)(70|80|81|90|91)[0-9]{8}$/)
+        .message(`phone number must be a valid nigerian number`),
+       
     organizationName: joiValidator
         .string()
         .optional(),
     registrationNumber: joiValidator
         .string()
-        .optional(),
-};
+        .optional()
+        .regex(/^[A-Z0-9]{6,10}$/
+        ),
+        name: joiValidator
+        .string()
+        .optional()
+        .regex(/^[A-Za-z\s'-]{2,50}$/
+        ),
+        story: joiValidator
+        .string()
+        .optional()
+        .regex(/^[\s\S]{10,5000}$/
+            
+        ),
+        title: joiValidator
+        .string()
+        .optional()
+        .regex(/^[A-Za-z0-9\s.,'-]{2,100}$/
+            
+        ),
+        subtitle: joiValidator
+        .string()
+        .optional()
+        .regex(/^[A-Za-z0-9\s.,'-]{2,150}$/
 
+          ),
+        
+        
+};
 
 const staffEntryValidator = (validateAllFields = false) => {
     return async (req, res, next) => {

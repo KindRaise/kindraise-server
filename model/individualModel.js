@@ -11,7 +11,13 @@ const individualSchema = new mongoose.Schema({
   blackList: [{ type: String }],
   isVerified: { type: Boolean, default: false },
   isAdmin: { type: Boolean, default: false },
-  role: { type: String, enum: ['individual', 'admin'],default: 'individual' }
+  role: { type: String, enum: ['individual', 'admin'],default: 'individual' },
+  campaign:{type:mongoose.Schema.ObjectId,
+    ref:"Campaign"
+  },
+  npo:{type:mongoose.Schema.ObjectId,
+    ref:"npo"
+  }
 }, { timestamps: true });
 
 const individualModel = mongoose.model('individual', individualSchema);
